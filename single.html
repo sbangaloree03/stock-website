@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <meta charset="utf-8">
+  <title>Stock Performance Comparison</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <!-- ** CSS Plugins Needed for the Project ** -->
+
+  <!-- Bootstrap -->
+  <link rel="stylesheet" href="plugins/bootstrap/bootstrap.min.css">
+  <!-- themefy-icon -->
+  <link rel="stylesheet" href="plugins/themify-icons/themify-icons.css">
+  <!--Favicon-->
+  <link rel="icon" href="images/favicon.png" type="image/x-icon">
+  <!-- fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700&display=swap" rel="stylesheet">
+  <!-- Main Stylesheet -->
+  <link href="assets/style.css" rel="stylesheet" media="screen" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+</head>
+
+<body>
+  <!-- header -->
+  <header class="shadow-bottom sticky-top bg-white">
+    <nav class="navbar navbar-expand-md navbar-light">
+      <div class="container">
+        <a class="navbar-brand px-2" href="index.html">Trend Torch</a>
+        <button class="navbar-toggler border-0" type="button" data-toggle="collapse" data-target="#navigation"
+          aria-controls="navigation" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse text-center" id="navigation">
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+              <a class="nav-link text-dark" href="index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-dark" href="faq.html">Utilities</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link text-dark" href="contact.html">Contact</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+  <!-- /header -->
+
+  <!-- details page -->
+  <section class="single section-sm pb-0">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-3">
+          <div class="sidebar">
+            <ul class="list-styled">
+              <a class="back-btn" href="index.html"></a>
+              <li class="sidelist">
+                <a href="single.html">Stock Performance Comparison</a><br>
+                <a href="single2.html">Real Time Stock Price</a><br>
+                <a href="single3.html">Stock Prediction</a><br>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-lg-9">
+          <div class="p-lg-5 p-4 bg-white">
+            <h2 class="mb-5">Stock Performance Comparison</h2>
+            <h3 class="mb-5">Pick a company</h3>
+            <div class="col-lg-8 text-center mx-auto">
+              <h1 class="text-black mb-3"></h1>
+              <div class="position-relative">
+                <!-- Search bar with dropdown -->
+                <input id="search" class="form-control" placeholder="Choose Stock..." multiple>
+                <i class="ti-search search-icon"></i>
+                <ul id="stockList" class="dropdown-content hidden"></ul>
+              </div>
+              <button id="enterButton" class="btn btn-primary mt-3">Enter</button>
+              <!-- Place for displaying the stock data and chart -->
+              <div id="stockData" class="mt-4"></div> <!-- Margin top for some spacing -->
+              <div id="chartContainer" class="mt-4">
+                <canvas id="stockChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- /details page -->
+
+  <!-- footer -->
+  <footer class="section pb-4">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-8 text-md-left text-center">
+          <p class="mb-md-0 mb-4">Copyright © 2024 Designed and Owned by <a
+              href="https://google.com/">Trend Torch</a></p>
+        </div>
+        <div class="col-md-4 text-md-right text-center">
+          <ul class="list-inline">
+            <li class="list-inline-item"><a class="text-color d-inline-block p-2" href="#"><i
+                  class="ti-facebook"></i></a></li>
+            <li class="list-inline-item"><a class="text-color d-inline-block p-2" href="#"><i
+                  class="ti-twitter-alt"></i></a></li>
+            <li class="list-inline-item"><a class="text-color d-inline-block p-2" href="#"><i
+                  class="ti-github"></i></a>
+            </li>
+            <li class="list-inline-item"><a class="text-color d-inline-block p-2" href="#"><i
+                  class="ti-linkedin"></i></a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <!-- /footer -->
+
+  <!-- ** JS Plugins Needed for the Project ** -->
+  <!-- jquiry -->
+  <script src="plugins/jquery/jquery-1.12.4.js"></script>
+  <!-- Bootstrap JS -->
+  <script src="plugins/bootstrap/bootstrap.min.js"></script>
+  <!-- match-height JS -->
+  <script src="plugins/match-height/jquery.matchHeight-min.js"></script>
+  <!-- Main Script -->
+  <script src="assets/script.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    $(document).ready(function () {
+      const searchInput = $('#search');
+      const stockList = $('#stockList');
+      const stockDataContainer = $('#stockData');
+      const chartContainer = $('#chartContainer');
+      let selectedStocks = [];
+    
+      // Function to fetch stock data from the API
+      async function fetchStockData(symbol) {
+        try {
+          const response = await axios.get(`https://share-market-news-api-india.p.rapidapi.com/marketNews?symbol=${symbol}`, {
+            headers: {
+              'X-RapidAPI-Key': '88348861d3msh37d9c6e6320e28ep1a5c80jsnfa349e44989',
+              'X-RapidAPI-Host': 'share-market-news-api-india.p.rapidapi.com'
+            }
+          });
+          return response.data;
+        } catch (error) {
+          console.error('Error fetching stock data:', error);
+          return null;
+        }
+      }
+    
+      // Function to display stock data
+      function displayStockData(symbols) {
+        const fetchDataPromises = symbols.map(symbol => fetchStockData(symbol));
+        Promise.all(fetchDataPromises)
+          .then(stockData => {
+            const formattedData = stockData.map(data => ({
+              date: data.date,
+              open: parseFloat(data.open),
+              high: parseFloat(data.high),
+              low: parseFloat(data.low),
+              close: parseFloat(data.close),
+              volume: parseInt(data.volume)
+            }));
+            displayRawData(formattedData);
+            displayChart(formattedData);
+          })
+          .catch(error => {
+            console.error('Error fetching stock data:', error);
+          });
+      }
+    
+      // Function to display stock data
+      function displayStockData(symbols) {
+        const data = [];
+        symbols.forEach(symbol => {
+          if (stockData.hasOwnProperty(symbol)) {
+            data.push(...stockData[symbol]);
+          }
+        });
+        displayRawData(data);
+        displayChart(data);
+      }
+    
+      // Function to display raw data
+      function displayRawData(data) {
+        let tableHTML = '<table class="table"><thead><tr><th>Date</th><th>Open</th><th>High</th><th>Low</th><th>Close</th><th>Volume</th></tr></thead><tbody>';
+        data.forEach(entry => {
+          tableHTML += `<tr><td>${entry.date}</td><td>${entry.open}</td><td>${entry.high}</td><td>${entry.low}</td><td>${entry.close}</td><td>${entry.volume}</td></tr>`;
+        });
+        tableHTML += '</tbody></table>';
+        stockDataContainer.html(tableHTML);
+      }
+    
+      // Function to display chart
+      function displayChart(data) {
+        const dates = data.map(entry => entry.date);
+        const closes = data.map(entry => entry.close);
+    
+        const ctx = document.getElementById('stockChart').getContext('2d');
+        const myChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: dates,
+            datasets: [{
+              label: 'Stock Price',
+              data: closes,
+              backgroundColor: 'rgba(75, 192, 192, 0.2)',
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: false
+              }
+            }
+          }
+        });
+      }
+    
+      searchInput.on('input', function () {
+        const symbols = $(this).val().split(/\s+/);
+        selectedStocks = symbols.filter((symbol, index, self) => self.indexOf(symbol) === index); // Remove duplicates
+        if (selectedStocks.length > 1) {
+          $('#stockList').find('.dropdown-item').removeClass('active');
+        }
+      });
+    
+      // Display stock list on input focus
+      searchInput.click(function () {
+        displayStockList();
+      });
+    
+      // Hide stock list when clicking outside
+      $(document).click(function (e) {
+        if (!$(e.target).closest('#search, #stockList').length) {
+          stockList.addClass('hidden');
+        }
+      });
+    
+      // Function to handle click on "Enter" button
+      $('#enterButton').click(function () {
+        // Display stock data and chart
+        displayStockData(selectedStocks);
+        // Hide stock list
+        $('#stockList').addClass('hidden');
+      });
+    });
+    
+    
+  </script>
+
+</body>
+
+</html>
